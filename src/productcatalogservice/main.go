@@ -52,6 +52,14 @@ var (
 
 func init() {
 	log = logrus.New()
+	log.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: "2006-01-02T15:04:05.000Z0700",
+		FieldMap: logrus.FieldMap{
+			logrus.FieldKeyLevel: "log.level",
+			logrus.FieldKeyMsg:   "message",
+			logrus.FieldKeyTime:  "@timestamp",
+		},
+	})
 	var err error
 	catalog, err = readProductFiles()
 	if err != nil {
@@ -249,6 +257,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 		msg := fmt.Sprintf("Product Not Found: %s", req.Id)
 		span.SetStatus(otelcodes.Error, msg)
 		span.AddEvent(msg)
+		log.Info(msg)
 		return nil, status.Errorf(codes.NotFound, msg)
 	}
 
@@ -257,6 +266,7 @@ func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductReque
 	span.SetAttributes(
 		attribute.String("app.product.name", found.Name),
 	)
+	log.Info(msg)
 	return found, nil
 }
 
